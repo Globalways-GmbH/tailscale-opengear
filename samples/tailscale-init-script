@@ -1,0 +1,48 @@
+#!/bin/sh -eu
+
+STATE="/etc/config/tailscale/tailscaled.state"
+SOCKET="/run/tailscale/tailscaled.sock"
+PID="/run/tailscale/tailscaled.pid"
+AUTHKEY="tskey-auth-XXX"
+DIR="/var/mnt/storage.nvlog/tailscale"
+LOGDIR="/var/log/"
+TAILSCALE="${DIR}/tailscale"
+TAILSCALED="${DIR}/tailscaled"
+PORT=41641
+
+[[ -d ${STATE%/*} ]]  || mkdir -p ${STATE%/*}
+[[ -d ${SOCKET%/*} ]] || mkdir -p ${SOCKET%/*}
+[[ -x $TAILSCALE ]]  || exit 0
+[[ -x $TAILSCALED ]] || exit 0
+
+do_status() {
+	$TAILSCALE status
+}
+do_start() {
+	logger -t tailscaled 'Starting Tailscale VPN "tailscaled"'
+   	if [ -s $PID ] && kill -0 $(cat $PID);then
+      		logger -t tailscaled "Tailscaled already running. pid=$(cat $PID)"
+		exit 0
+   	else
+   		[ -s ${LOGDIR}tailscaled.log ] && /bin/mv ${LOGDIR}tailscaled.log ${LOGDIR}tailscaled.log.1
+   		${TAILSCALED} --state=${STATE} --socket=${SOCKET} --port ${PORT} > ${LOGDIR}tailscaled.log 2>&1 & echo $! > $PID
+   	fi
+   	$TAILSCALE --socket=${SOCKET} up --authkey $AUTHKEY > ${LOGDIR}tailscaled.log 2>&1
+}
+do_stop() {
+	$TAILSCALE --socket=${SOCKET} down > ${LOGDIR}tailscaled.log 2>&1
+	$TAILSCALED --socket=${SOCKET} --state=${STATE} -cleanup > ${LOGDIR}tailscaled.log 2>&1
+	kill -15 $(cat $PID)
+	if [ -s $PID ] && kill -0 $(cat $PID);then
+		kill -9 $(cat $PID)
+		rm $PID
+	fi
+}
+
+case "${1-}" in
+	status) do_status ;;
+	start)  do_start ;;
+	restart) do_stop || true; do_start ;;
+	stop) do_stop ;;
+	*) echo "usage: $0 {status|start|restart|stop}";;
+esac
