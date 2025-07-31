@@ -1,7 +1,7 @@
 # HowTo Install tailscale on OpenGear
 Short write-up on how to install tailscale on OpenGear.
 
-This is currently tested and used on the OpenGear Models `ACM7004-5-L` and `IM7216-2` with the OpenGear up to firmware Version `4.13.6` and tailscale version `1.62`.
+This is currently tested and used on the OpenGear Models `ACM7004-5-L` and `IM7216-2` with the OpenGear up to firmware Version `5.2.3` and tailscale version `1.86.2`.
 
 There MAY be some adjustments needed if deploying older tailscale binaries.
 

@@ -1,5 +1,6 @@
 #!/bin/sh -eu
 
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 STATE="/etc/config/tailscale/tailscaled.state"
 SOCKET="/run/tailscale/tailscaled.sock"
 PID="/run/tailscale/tailscaled.pid"
